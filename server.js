@@ -2,6 +2,24 @@ import express from 'express';
 const app = express();
 const PORT = process.env.PORT || 3848;
 
+// Basic Auth middleware
+const AUTH_USER = process.env.AUTH_USER || 'Arvis';
+const AUTH_PASS = process.env.AUTH_PASS || 'Arvis777';
+
+app.use((req, res, next) => {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Basic ')) {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Arvis Teleprompter"');
+    return res.status(401).send('Authentication required');
+  }
+  const [user, pass] = Buffer.from(auth.split(' ')[1], 'base64').toString().split(':');
+  if (user === AUTH_USER && pass === AUTH_PASS) {
+    return next();
+  }
+  res.setHeader('WWW-Authenticate', 'Basic realm="Arvis Teleprompter"');
+  return res.status(401).send('Invalid credentials');
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
